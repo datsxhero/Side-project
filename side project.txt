@@ -1,0 +1,123 @@
+#include <iostream>  // 引入標準輸入輸出庫，用於顯示訊息與接收輸入
+#include <fstream>   // 引入檔案輸入輸出庫，用於處理檔案的讀寫
+#include <string>    // 引入字串類別庫，用於處理字串
+
+using namespace std; // 使用標準命名空間，避免每次使用標準函數都需要加上 std::
+
+void addNote();      // 函數宣告：新增記事
+void viewNotes();    // 函數宣告：查看所有記事
+void deleteNote();   // 函數宣告：刪除指定記事
+
+int main() {
+    int choice; // 儲存使用者選擇的選項
+
+    while (true) { // 使用無限迴圈，不斷顯示主選單直到使用者選擇退出
+        // 主選單
+        cout << "========== 記事本 ==========" << endl;
+        cout << "1. 新增記事" << endl;      // 選項 1：新增記事
+        cout << "2. 查看記事" << endl;      // 選項 2：查看記事
+        cout << "3. 刪除記事" << endl;      // 選項 3：刪除記事
+        cout << "4. 退出程式" << endl;      // 選項 4：退出程式
+        cout << "請選擇一個選項: ";
+        cin >> choice; // 接收使用者的選擇
+
+        switch (choice) { // 使用 switch 判斷使用者選擇的功能
+            case 1: // 選擇 1：新增記事
+                addNote();
+                break;
+            case 2: // 選擇 2：查看所有記事
+                viewNotes();
+                break;
+            case 3: // 選擇 3：刪除指定記事
+                deleteNote();
+                break;
+            case 4: // 選擇 4：退出程式
+                cout << "謝謝使用記事本！再見！" << endl;
+                return 0; // 結束程式
+            default: // 當輸入無效選項時，提示使用者
+                cout << "無效選項，請重新輸入。" << endl;
+                break;
+        }
+    }
+}
+
+// 函數定義：新增記事
+void addNote() {
+    ofstream file("notes.txt", ios::app); // 開啟檔案，使用附加模式（ios::app）以保留原內容
+    if (!file) { // 檢查檔案是否成功開啟
+        cout << "無法開啟檔案！" << endl;
+        return; // 如果開啟失敗，結束函數
+    }
+
+    string note; // 儲存使用者輸入的記事
+    cout << "請輸入您的記事: ";
+    cin.ignore(); // 忽略上一個輸入的換行符，避免 getline 讀取到空行
+    getline(cin, note); // 使用 getline 接收完整的多字元輸入
+
+    file << note << endl; // 將記事寫入檔案並換行
+    cout << "記事已成功新增！" << endl;
+
+    file.close(); // 關閉檔案，釋放資源
+}
+
+// 函數定義：查看所有記事
+void viewNotes() {
+    ifstream file("notes.txt"); // 開啟檔案，使用讀取模式
+    if (!file) { // 檢查檔案是否成功開啟
+        cout << "無法開啟檔案！" << endl;
+        return; // 如果開啟失敗，結束函數
+    }
+
+    string line; // 用於逐行讀取檔案內容
+    cout << "========== 所有記事 ==========" << endl;
+    int lineNumber = 1; // 初始化行號
+    while (getline(file, line)) { // 使用 getline 逐行讀取檔案內容
+        cout << lineNumber++ << ". " << line << endl; // 顯示行號與記事內容
+    }
+
+    file.close(); // 關閉檔案，釋放資源
+}
+
+// 函數定義：刪除指定記事
+void deleteNote() {
+    ifstream file("notes.txt"); // 開啟原始檔案，使用讀取模式
+    if (!file) { // 檢查檔案是否成功開啟
+        cout << "無法開啟檔案！" << endl;
+        return; // 如果開啟失敗，結束函數
+    }
+
+    ofstream tempFile("temp.txt"); // 開啟臨時檔案，用於儲存修改後的內容
+    if (!tempFile) { // 檢查臨時檔案是否成功開啟
+        cout << "無法建立臨時檔案！" << endl;
+        return; // 如果開啟失敗，結束函數
+    }
+
+    int deleteLine; // 儲存使用者選擇刪除的行號
+    cout << "請輸入您想刪除的記事行號: ";
+    cin >> deleteLine;
+
+    string line;  // 用於逐行讀取檔案內容
+    int lineNumber = 1; // 初始化行號
+    bool deleted = false; // 標記是否成功刪除
+
+    while (getline(file, line)) { // 使用 getline 逐行讀取原始檔案內容
+        if (lineNumber == deleteLine) { // 如果當前行是指定刪除的行
+            deleted = true; // 設置刪除標記
+        } else {
+            tempFile << line << endl; // 將其他行寫入臨時檔案
+        }
+        lineNumber++; // 行號遞增
+    }
+
+    file.close(); // 關閉原始檔案
+    tempFile.close(); // 關閉臨時檔案
+
+    remove("notes.txt");          // 刪除原始檔案
+    rename("temp.txt", "notes.txt"); // 將臨時檔案重命名為原始檔案
+
+    if (deleted) {
+        cout << "記事已成功刪除！" << endl; // 如果成功刪除，提示使用者
+    } else {
+        cout << "未找到指定的行號，無法刪除。" << endl; // 如果未成功刪除，提示使用者
+    }
+}
